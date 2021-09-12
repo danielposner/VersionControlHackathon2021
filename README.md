@@ -5,4 +5,6 @@ Currently built only for a specific input -> will need to be adapated at some po
 
                                              a) different variable types e.g. Categorical,
                                                        i) This also invites testing more than 2 variables at once
+                                                       ii) This also demands different tests and an algorithm for determining which tests to apply
+                                                       
                                              b) Different file inputs (txt, different layout etc)
