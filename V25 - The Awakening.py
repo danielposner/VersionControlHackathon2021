@@ -34,7 +34,7 @@ from scipy.stats import bartlett
 
 with open("winequality-white.csv", 'r') as f:
     wines = list(csv.reader(f, delimiter=";"))
-    ## Bug 1 - for some reason - the column names are buggery
+
 names = wines[0]
 names = names[0].split(";")
 wines = np.array(wines[1:], float)
@@ -50,8 +50,6 @@ rangerows = range(rows)
 rangecols = range(cols)
     ## Bug 2 - Rows mean cols and cols mean rows. No functional difference just makes code ugly
 
-## Maybe if nothing else works use below
-## https://medium.com/the-code-monster/split-a-dataset-into-train-and-test-datasets-using-sk-learn-acc7fd1802e0
 
 
 ##############################################################################################################################################
@@ -101,8 +99,9 @@ class Main:
 
 
 ####################################################################################################
-    ## Not using spearmans yet - later implementation for non-continuous variables
+    ## Not using spearmans or Cramers yet - later implementation for non-continuous variables
 
+##
     def _spearman_correlation_test(self, a, b):
         """Does the spearman correlation for two variables
         @return the P value and correlation value
@@ -110,14 +109,18 @@ class Main:
         """
         x = spearmanr(a,b)
         return [x[0], x[1]]
+
+    
         #Returns Correlation
         ## Returns P value against null
 
 
     #def _cramers_v_contingency_test(self,a,b):
-    # DO not use - only accepts integer arrays
-    
+    # Do not use - only accepts integer arrays
+   
+####################################################################################################   
     def _equal_pop_variance_bartlett(self, a, b):
+        """Test for equal population variance."""
         stat, p = bartlett(a, b)
         if p > 0.05:
             self.tag.append("1")
@@ -141,14 +144,13 @@ class Main:
 ####################################################################################################
 
     def _dependency_regression_1(self, a,b):
-    ## https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html#examples
-    ## -using-sklearn-feature-selection-mutual-info-regression
         """Measures dependency between variables
         """
-        #### ERROR -> Not sure how to read the data
+            ## https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.mutual_info_regression.html#examples
+    ## -using-sklearn-feature-selection-mutual-info-regression
         x = sklearn.feature_selection.mutual_info_regression(a.reshape(-1, 1), b)
         y = sklearn.feature_selection.mutual_info_regression(b.reshape(-1, 1), a)
-        if x > 0.75 and y > 0.75: ## Semiarbitrary - attach email
+        if x > 0.75 and y > 0.75:
             self.tag.append("1")
             self.tag.append("1")
 
@@ -176,9 +178,6 @@ class Main:
         Wants 2 dependent on 1 but so be it
         """
         x = linregress(a, b)
-        #y = linregress(b,a)
-        #self.tag.append("0")
-        #self.tag.append("0")
         if x[2] > .3: #corr coeff medium
             self.tag.append("1")
         else:
@@ -187,24 +186,11 @@ class Main:
             self.tag.append("1")
         else:
             self.tag.append("0")
-            
-            
-
+       
         #return x[0], x[1] Slope and intercept - useless here
         return  x[2], x[3] ## Slope, intercept, Correlation Coefficient, P-value (wald)
 
-#########################################
-#############UNBUILT#####################
-#########################################
-    def _dependent_t_test(a,b):
-        """Applies for dependent variables
-        DO DEPENDENCE TEST FIRST"""
 
-    ## Find another test or two
-
-#########################################
-#############UNBUILT#####################
-#########################################
 
 
     def _std(self, a, b):
@@ -217,18 +203,14 @@ class Main:
     def _95_confidence_interval_true_mean_under_30_samples(a, b):
         """ 95% Confidence interval for true mean
         This formula is preferred when we have less than 30 samples (we can't assume mean is normally distrubuted)"""
-        ### CHECK THIS
         return [st.t.interval(alpha=0.95, df=len(a)-1, loc=np.mean(a), scale=st.sem(a))]
-        ### CHECK THIS
 
     def _95_confidence_interval_true_mean_over_30_samples(self, a, b):
         """ 95% Confidence interval for true mean
         This formula is preferred when we have over 30 samples and can assume normal distrubution)
         Gets very repetetive (deal with it)"""
         
-        ### CHECK THIS
         return [st.norm.interval(alpha=0.95, loc=np.mean(a), scale=st.sem(a))]
-        ### CHECK THIS
 
 
     
@@ -292,15 +274,14 @@ class Main:
                           self._dependency_regression_1, self._liner_regression_model,
                           self._equal_pop_variance_bartlett, self._v1_normal_dist_test
                           ]
-
-## Not testing ordinal variables here
-## Removed useless data
-                            ## self._mean, self._median, self._std, self._standard_error, self._inter_quartile_range,
-                          #self._listing_Confidence_Intervals, self._spearman_correlation_test,
+        
+        self.unused_list = [self._mean, self._median, self._std, self._standard_error, ## Data tests that may be useful for other applications
+                            self._inter_quartile_range,self._listing_Confidence_Intervals,
+                            self._spearman_correlation_test]
 
 
         special = ["Identified Variables"]
-        for n in self.full_list: #### RECHECK TAGS FOR ALL SETS
+        for n in self.full_list: 
             if n == self._mean:
                 special.append("Mean")
             if n == self._median:
@@ -363,7 +344,6 @@ class Main:
                         results.append(n)
                         
                 results.append(self.tag)
-                ## Adds tag to end -> Mess with joining at end during cleanup
                 writer.writerow(results) ## Writes in
 
     def cleaner1(self):
@@ -438,5 +418,5 @@ kk = Main()
 kk.function_list()
 kk.iterative_cycle()
 kk.cleaner1()
-kk.correlation_plot1() # nice visual for ending
-kk.correlation_plot2() 
+#kk.correlation_plot1() # nice visual for ending
+#kk.correlation_plot2() 
